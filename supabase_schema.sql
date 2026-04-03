@@ -11,6 +11,7 @@ create table users (
     check (kyc_status in ('pending','submitted','verified','rejected')),
   kyc_income_proof_url text,
   kyc_id_proof_url text,
+  is_admin boolean default false,
   is_active boolean default true,
   is_blocked boolean default false,
   created_at timestamptz default now(),
@@ -247,19 +248,24 @@ alter table notifications enable row level security;
 
 -- Users can only read/update their own data
 create policy "users_own_data" on users
-  for all using (auth.uid() = id);
+  for all using (auth.uid() = id or (select is_admin from users where id = auth.uid()));
 create policy "wallet_own" on wallets
-  for all using (auth.uid() = user_id);
+  for all using (auth.uid() = user_id or (select is_admin from users where id = auth.uid()));
 create policy "transactions_own" on fc_transactions
-  for select using (auth.uid() = user_id);
+  for select using (auth.uid() = user_id or (select is_admin from users where id = auth.uid()));
 create policy "bets_own" on bets
-  for all using (auth.uid() = user_id);
+  for all using (auth.uid() = user_id or (select is_admin from users where id = auth.uid()));
 create policy "withdrawals_own" on withdrawals
-  for all using (auth.uid() = user_id);
+  for all using (auth.uid() = user_id or (select is_admin from users where id = auth.uid()));
 create policy "coupons_own" on coupon_redemptions
-  for all using (auth.uid() = user_id);
+  for all using (auth.uid() = user_id or (select is_admin from users where id = auth.uid()));
 create policy "notifications_own" on notifications
-  for all using (auth.uid() = user_id);
+  for all using (auth.uid() = user_id or (select is_admin from users where id = auth.uid()));
+
+-- Admins can view/update all relevant operational data
+create policy "admins_all_users" on users for all using ( (select is_admin from users where id = auth.uid()) );
+create policy "admins_all_withdrawals" on withdrawals for all using ( (select is_admin from users where id = auth.uid()) );
+create policy "admins_all_notifications" on notifications for all using ( (select is_admin from users where id = auth.uid()) );
 
 -- Public read on cricket matches and brackets
 create policy "matches_public_read" on cricket_matches
