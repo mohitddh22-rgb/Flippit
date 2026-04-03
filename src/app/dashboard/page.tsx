@@ -9,11 +9,22 @@ export default async function DashboardPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
-    return <div>Not authenticated</div>
-  }
+  let { data: userData } = await supabase.from('users').select('*').eq('id', user.id).single()
 
-  const { data: userData } = await supabase.from('users').select('*').eq('id', user.id).single()
+  // 1. Lazy Sync: If user exists in Auth but not in public.users, create it.
+  if (!userData) {
+    const { data: newUser, error: syncError } = await supabase.from('users').insert({
+      id: user.id,
+      email: user.email,
+      full_name: user.user_metadata?.full_name || 'User',
+      phone: user.user_metadata?.phone || '',
+      kyc_status: 'pending'
+    }).select().single()
+    
+    if (!syncError) {
+      userData = newUser
+    }
+  }
 
   // Fetch real matches
   const { data: matches } = await supabase
