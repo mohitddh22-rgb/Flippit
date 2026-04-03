@@ -35,6 +35,13 @@ export default async function DashboardPage() {
             </p>
           </div>
           <div className="flex gap-4">
+            {userData?.is_admin && (
+              <Link href="/admin">
+                <Button variant="outline" className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-950 hover:text-emerald-300 font-bold uppercase italic tracking-tighter">
+                  Admin Dashboard
+                </Button>
+              </Link>
+            )}
             <Link href="/wallet">
               <Button variant="outline" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-950 hover:text-emerald-300">
                 My Wallet
