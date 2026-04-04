@@ -1,13 +1,19 @@
 import { createClient } from '@/utils/supabase/server'
+export const dynamic = 'force-dynamic'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
 import { Trophy, Calendar, Zap } from 'lucide-react'
+import { redirect } from 'next/navigation'
 
 export default async function DashboardPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return redirect('/auth/login')
+  }
 
   let { data: userData } = await supabase.from('users').select('*').eq('id', user.id).single()
 
